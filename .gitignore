@@ -1,0 +1,19 @@
+# Құпия деректер
+.env
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Дерекқор және логтар
+*.db
+*.sqlite3
+logs/
+
+# Редактор / жүйе
+.vscode/
+.idea/
+.DS_Store
