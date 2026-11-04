@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Қойма – тауар қоймасын басқару жүйесі</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<section id="auth" class="hide">
+  <form class="lbox" id="loginForm" novalidate>
+    <h1>Қойма</h1>
+    <p class="sub">Тауар қоймасын басқару жүйесі</p>
+    <label for="lu">Логин немесе email</label><input id="lu" autocomplete="username">
+    <label for="lp">Құпиясөз</label><input id="lp" type="password" autocomplete="current-password">
+    <div class="msg" id="lmsg" role="alert"></div>
+    <button class="btn full" type="submit">Кіру</button>
+    <p class="swap">Аккаунтыңыз жоқ па? <button type="button" class="lnk" id="toReg">Тіркелу</button></p>
+  </form>
+
+  <form class="lbox hide" id="regForm" novalidate>
+    <h1>Тіркелу</h1>
+    <p class="sub">Аккаунт жасаңыз, содан кейін кіресіз</p>
+    <label for="ru">Логин</label><input id="ru" autocomplete="username">
+    <label for="re">Email</label><input id="re" type="email" autocomplete="email">
+    <label for="rp">Құпиясөз (әріп пен сан, кемінде 6 таңба)</label><input id="rp" type="password" autocomplete="new-password">
+    <label for="rp2">Құпиясөзді қайталаңыз</label><input id="rp2" type="password" autocomplete="new-password">
+    <div class="msg" id="rmsg" role="alert"></div>
+    <button class="btn full" type="submit">Тіркелу</button>
+    <p class="swap">Аккаунтыңыз бар ма? <button type="button" class="lnk" id="toLogin">Кіру</button></p>
+  </form>
+</section>
+
+<div id="app" class="hide">
+  <header>
+    <h1>Қойма</h1>
+    <span id="who"></span><span class="role" id="role"></span>
+    <button class="btn ghost sm" id="logout">Шығу</button>
+  </header>
+  <main>
+    <div class="stats">
+      <div class="st"><b id="s1">0</b><span>Тауар түрі</span></div>
+      <div class="st"><b id="s2">0</b><span>Қоймадағы жалпы саны</span></div>
+      <div class="st"><b id="s3">0 ₸</b><span>Қойма құны</span></div>
+      <div class="st warn"><b id="s4">0</b><span>Қалдығы аз тауарлар</span></div>
+    </div>
+    <div class="banner hide" id="banner" role="alert"></div>
+    <div class="tabs">
+      <button class="tab on" data-t="goods">Тауарлар</button>
+      <button class="tab" data-t="moves">Қозғалыс тарихы</button>
+      <button class="tab hide" data-t="users">Қолданушылар</button>
+    </div>
+
+    <div id="goods">
+      <div class="bar">
+        <input id="q" placeholder="Атауы немесе артикулі бойынша іздеу" aria-label="Іздеу">
+        <select id="f" aria-label="Сүзгі"><option value="0">Барлығы</option><option value="1">Қалдығы аз</option></select>
+        <button class="btn edit-only hide" id="addBtn">Тауар қосу</button>
+      </div>
+      <div class="wrap"><table><thead><tr><th>Артикул</th><th>Атауы</th><th>Санаты</th><th>Бағасы</th><th>Қалдық</th><th>Күйі</th><th></th></tr></thead><tbody id="gb"></tbody></table></div>
+    </div>
+
+    <div id="moves" class="hide">
+      <div class="wrap"><table><thead><tr><th>Уақыты</th><th>Тауар</th><th>Операция</th><th>Саны</th><th>Қолданушы</th></tr></thead><tbody id="mb"></tbody></table></div>
+    </div>
+
+    <div id="users" class="hide">
+      <div class="wrap"><table><thead><tr><th>Логин</th><th>Email</th><th>Рөлі</th><th>Рөлді өзгерту</th><th></th></tr></thead><tbody id="ub"></tbody></table></div>
+    </div>
+  </main>
+</div>
+
+<dialog id="di">
+  <form id="itemForm" novalidate>
+    <h2 id="dit">Тауар қосу</h2>
+    <label for="iname">Атауы</label><input id="iname">
+    <div class="row"><div><label for="isku">Артикул</label><input id="isku"></div><div><label for="icat">Санаты</label><input id="icat"></div></div>
+    <div class="row"><div><label for="iprice">Бағасы, ₸</label><input id="iprice" type="number" min="0"></div><div><label for="imin">Минималды қалдық</label><input id="imin" type="number" min="0"></div></div>
+    <div id="qtyrow"><label for="iqty">Бастапқы саны</label><input id="iqty" type="number" min="0" value="0"></div>
+    <div class="msg" id="imsg" role="alert"></div>
+    <div class="foot"><button type="button" class="btn ghost" data-close="di">Бас тарту</button><button class="btn" type="submit">Сақтау</button></div>
+  </form>
+</dialog>
+
+<dialog id="dm">
+  <form id="moveForm" novalidate>
+    <h2 id="dmt">Қозғалыс</h2>
+    <label for="mqty">Саны</label><input id="mqty" type="number" min="1" value="1">
+    <div class="msg" id="mmsg" role="alert"></div>
+    <div class="foot"><button type="button" class="btn ghost" data-close="dm">Бас тарту</button><button class="btn" type="submit">Растау</button></div>
+  </form>
+</dialog>
+
+<dialog id="dc">
+  <h2 id="dct">Растау</h2>
+  <p id="dcm"></p>
+  <div class="foot"><button class="btn ghost" data-close="dc">Бас тарту</button><button class="btn danger" id="dcok">Жою</button></div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
