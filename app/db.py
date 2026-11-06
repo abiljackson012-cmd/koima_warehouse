@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user','manager','admin')),
+    role TEXT NOT NULL DEFAULT 'buyer' CHECK (role IN ('buyer','manager','admin')),
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS products (
@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS products (
     price INTEGER NOT NULL CHECK (price >= 0),
     quantity INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
     min_quantity INTEGER NOT NULL DEFAULT 0 CHECK (min_quantity >= 0),
+    image TEXT,
     created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS movements (
@@ -46,6 +47,29 @@ CREATE TABLE IF NOT EXISTS movements (
 CREATE TABLE IF NOT EXISTS revoked_tokens (
     jti TEXT PRIMARY KEY,
     expires_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS cart_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    UNIQUE (user_id, product_id)
+);
+CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    username TEXT NOT NULL,
+    total INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','done')),
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS order_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+    product_name TEXT NOT NULL,
+    price INTEGER NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity > 0)
 )
 """
 

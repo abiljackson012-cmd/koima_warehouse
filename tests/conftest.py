@@ -15,6 +15,7 @@ def app(tmp_path):
         "SECRET_KEY": "test-secret-key-for-pytest-only-0123456789",
         "DATABASE_URL": f"sqlite:///{tmp_path / 'test.db'}",
         "LOG_FILE": None,
+        "UPLOAD_DIR": str(tmp_path / "uploads"),
         "ADMIN_USERNAME": ADMIN[0], "ADMIN_PASSWORD": ADMIN[1],
         "MANAGER_USERNAME": MANAGER[0], "MANAGER_PASSWORD": MANAGER[1],
         "SEED_DEMO_DATA": False,

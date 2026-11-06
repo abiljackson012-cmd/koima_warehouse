@@ -4,11 +4,11 @@ import jwt
 REG = {"username": "aidar", "email": "Aidar@Example.com", "password": "Secret123"}
 
 
-def test_register_success_defaults_to_user_role(anon):
+def test_register_success_defaults_to_buyer_role(anon):
     r = anon.post("/api/auth/register", json=REG)
     assert r.status_code == 201
     u = r.get_json()["user"]
-    assert u["role"] == "user" and u["email"] == "aidar@example.com"
+    assert u["role"] == "buyer" and u["email"] == "aidar@example.com"
     assert "password" not in u and "password_hash" not in u
 
 

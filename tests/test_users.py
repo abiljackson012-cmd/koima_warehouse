@@ -30,7 +30,7 @@ def test_invalid_role_rejected(admin, user):
 
 def test_admin_cannot_change_or_delete_self(admin):
     me = admin.get("/api/auth/me").get_json()["user"]["id"]
-    assert admin.patch(f"/api/users/{me}", json={"role": "user"}).status_code == 409
+    assert admin.patch(f"/api/users/{me}", json={"role": "buyer"}).status_code == 409
     assert admin.delete(f"/api/users/{me}").status_code == 409
 
 
