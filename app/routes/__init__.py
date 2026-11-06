@@ -8,3 +8,8 @@ def json_body() -> dict:
     if not isinstance(data, dict):
         raise AppError(400, "invalid_json", "Сұраныс денесі дұрыс JSON нысаны болуы керек.")
     return data
+
+
+def image_url(filename):
+    """Дискідегі файл атын браузер сілтемесіне айналдырады."""
+    return f"/uploads/{filename}" if filename else None

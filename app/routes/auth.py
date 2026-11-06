@@ -45,7 +45,7 @@ def register():
         raise AppError(409, "email_taken", "Бұл email-мен аккаунт бұрыннан бар.",
                        [{"field": "email", "message": "Бұл email тіркелген."}])
     uid = db.insert(
-        "INSERT INTO users (username, email, password_hash, role, created_at) VALUES (?, ?, ?, 'user', ?)",
+        "INSERT INTO users (username, email, password_hash, role, created_at) VALUES (?, ?, ?, 'buyer', ?)",
         (data.username, data.email, generate_password_hash(data.password), now()),
     )
     user = db.one(f"SELECT {USER_FIELDS} FROM users WHERE id = ?", (uid,))

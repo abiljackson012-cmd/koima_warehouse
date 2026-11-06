@@ -124,4 +124,18 @@ class MovementListQuery(Base):
 
 # ---------- Қолданушылар ----------
 class RoleIn(Base):
-    role: Literal["user", "manager", "admin"]
+    role: Literal["buyer", "manager", "admin"]
+
+
+# ---------- Себет және тапсырыс ----------
+class CartAddIn(Base):
+    product_id: StrictInt = Field(ge=1)
+    quantity: StrictInt = Field(default=1, ge=1, le=1000)
+
+
+class CartSetIn(Base):
+    quantity: StrictInt = Field(ge=0, le=1000)
+
+
+class OrderStatusIn(Base):
+    status: Literal["new", "done"]

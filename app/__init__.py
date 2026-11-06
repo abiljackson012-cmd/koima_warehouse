@@ -39,14 +39,16 @@ def create_app(overrides=None):
         app.config.update(overrides)
     if not app.config["SECRET_KEY"] or len(app.config["SECRET_KEY"]) < 32:
         raise RuntimeError("SECRET_KEY орнатылмаған немесе тым қысқа. .env файлына кемінде 32 таңба жазыңыз.")
-    app.config["MAX_CONTENT_LENGTH"] = 64 * 1024
+    app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024  # сурет жүктеуге жеткілікті
+    app.config.setdefault("UPLOAD_DIR", os.path.join(app.static_folder, "uploads"))
+    os.makedirs(app.config["UPLOAD_DIR"], exist_ok=True)
 
     _setup_logging(app)
     db.init_app(app)
     register_errors(app)
 
-    from .routes import auth, products, users
-    for module in (auth, products, users):
+    from .routes import auth, cart, orders, products, users
+    for module in (auth, products, users, cart, orders):
         app.register_blueprint(module.bp)
 
     @app.get("/")

@@ -12,6 +12,7 @@ venv/
 *.db
 *.sqlite3
 logs/
+app/static/uploads/
 
 # Редактор / жүйе
 .vscode/

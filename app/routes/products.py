@@ -1,22 +1,27 @@
 import logging
+import os
+import uuid
 
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request
 
 from ..auth import require
 from ..db import get_db, now
 from ..errors import AppError
 from ..validation import (MovementIn, MovementListQuery, ProductCreate, ProductListQuery, ProductPatch,
                           ProductUpdate, parse)
-from . import json_body
+from . import image_url, json_body
 
 log = logging.getLogger("warehouse")
 bp = Blueprint("products", __name__, url_prefix="/api")
 
-COLS = "id, sku, name, category, price, quantity, min_quantity, created_at"
+COLS = "id, sku, name, category, price, quantity, min_quantity, image, created_at"
+IMAGE_MAX = 3 * 1024 * 1024  # 3 МБ
+SIGNATURES = ((b"\xff\xd8\xff", "jpg"), (b"\x89PNG\r\n\x1a\n", "png"))
 
 
 def _out(p: dict) -> dict:
     p["low"] = p["quantity"] <= p["min_quantity"]
+    p["image_url"] = image_url(p.pop("image", None))
     return p
 
 
@@ -40,6 +45,25 @@ def _log_move(db, product, ptype, qty):
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
         (product["id"], product["name"], g.user["id"], g.user["username"], ptype, qty, now()),
     )
+
+
+def _remove_file(filename):
+    if not filename:
+        return
+    try:
+        os.remove(os.path.join(current_app.config["UPLOAD_DIR"], filename))
+    except OSError:
+        pass
+
+
+def _detect_ext(data: bytes):
+    """Файлдың шын түрін мазмұны бойынша анықтайды (атауы мен кеңейтіміне қарамай)."""
+    for sig, ext in SIGNATURES:
+        if data.startswith(sig):
+            return ext
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "webp"
+    return None
 
 
 @bp.get("/products")
@@ -107,12 +131,41 @@ def patch_product(pid):
     return _update(pid, parse(ProductPatch, json_body()).model_dump(exclude_none=True))
 
 
+@bp.post("/products/<int:pid>/image")
+@require("manager", "admin")
+def upload_image(pid):
+    db = get_db()
+    product = _get_or_404(db, pid)
+    f = request.files.get("image")
+    if f is None or not f.filename:
+        raise AppError(422, "validation_error", "Файл таңдалмаған.",
+                       [{"field": "image", "message": "Сурет файлын таңдаңыз."}])
+    data = f.read(IMAGE_MAX + 1)
+    if len(data) > IMAGE_MAX:
+        raise AppError(413, "file_too_large", "Сурет тым үлкен. Ең көбі 3 МБ.")
+    ext = _detect_ext(data)
+    if ext is None:
+        raise AppError(422, "validation_error", "Тек JPG, PNG немесе WEBP суретін жүктеңіз.",
+                       [{"field": "image", "message": "Рұқсат етілмеген файл түрі."}])
+    folder = current_app.config["UPLOAD_DIR"]
+    os.makedirs(folder, exist_ok=True)
+    name = f"{uuid.uuid4().hex}.{ext}"
+    with open(os.path.join(folder, name), "wb") as out:
+        out.write(data)
+    old = product["image"]
+    db.execute("UPDATE products SET image = ? WHERE id = ?", (name, pid))
+    _remove_file(old)
+    log.info("Тауар суреті жүктелді: id=%s — %s", pid, g.user["username"])
+    return jsonify(product=_out(_get_or_404(db, pid)))
+
+
 @bp.delete("/products/<int:pid>")
 @require("admin")
 def delete_product(pid):
     db = get_db()
     product = _get_or_404(db, pid)
     db.execute("DELETE FROM products WHERE id = ?", (pid,))
+    _remove_file(product["image"])
     log.info("Тауар жойылды: %s — %s", product["name"], g.user["username"])
     return "", 204
 
@@ -131,8 +184,7 @@ def add_movement(pid):
                              (data.quantity, pid, data.quantity))
         if not changed:
             current = _get_or_404(db, pid)["quantity"]
-            raise AppError(409, "not_enough_stock", f"Қоймада тек {current} дана бар. Азырақ сан енгізіңіз.",
-                           [{"field": "quantity", "message": f"Қалдық: {current}"}])
+            raise AppError(409, "not_enough_stock", f"Қоймада тек {current} дана бар. Азырақ сан енгізіңіз.")
     _log_move(db, product, data.type, data.quantity)
     return jsonify(product=_out(_get_or_404(db, pid))), 201
 
