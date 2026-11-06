@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Қойма – тауар қоймасын басқару жүйесі</title>
+<title>Қойма – тауар дүкені және қойма</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <section id="auth" class="hide">
   <form class="lbox" id="loginForm" novalidate>
     <h1>Қойма</h1>
-    <p class="sub">Тауар қоймасын басқару жүйесі</p>
+    <p class="sub">Тауар дүкені және қойма жүйесі</p>
     <label for="lu">Логин немесе email</label><input id="lu" autocomplete="username">
     <label for="lp">Құпиясөз</label><input id="lp" type="password" autocomplete="current-password">
     <div class="msg" id="lmsg" role="alert"></div>
@@ -39,35 +39,53 @@
     <button class="btn ghost sm" id="logout">Шығу</button>
   </header>
   <main>
-    <div class="stats">
+    <div class="stats" data-show="staff">
       <div class="st"><b id="s1">0</b><span>Тауар түрі</span></div>
       <div class="st"><b id="s2">0</b><span>Қоймадағы жалпы саны</span></div>
       <div class="st"><b id="s3">0 ₸</b><span>Қойма құны</span></div>
       <div class="st warn"><b id="s4">0</b><span>Қалдығы аз тауарлар</span></div>
     </div>
     <div class="banner hide" id="banner" role="alert"></div>
-    <div class="tabs">
-      <button class="tab on" data-t="goods">Тауарлар</button>
-      <button class="tab" data-t="moves">Қозғалыс тарихы</button>
-      <button class="tab hide" data-t="users">Қолданушылар</button>
-    </div>
 
-    <div id="goods">
+    <nav class="tabs">
+      <button class="tab on" data-t="goods">Тауарлар</button>
+      <button class="tab" data-t="cart" data-show="buyer">Себет<span id="cartCount"></span></button>
+      <button class="tab" data-t="orders">Тапсырыстар</button>
+      <button class="tab" data-t="moves" data-show="staff">Қозғалыс тарихы</button>
+      <button class="tab" data-t="users" data-show="admin">Қолданушылар</button>
+    </nav>
+
+    <section id="goods">
       <div class="bar">
         <input id="q" placeholder="Атауы немесе артикулі бойынша іздеу" aria-label="Іздеу">
-        <select id="f" aria-label="Сүзгі"><option value="0">Барлығы</option><option value="1">Қалдығы аз</option></select>
-        <button class="btn edit-only hide" id="addBtn">Тауар қосу</button>
+        <select id="f" aria-label="Сүзгі" data-show="staff">
+          <option value="0">Барлығы</option><option value="1">Қалдығы аз</option>
+        </select>
+        <button class="btn" id="addBtn" data-show="staff">Тауар қосу</button>
       </div>
-      <div class="wrap"><table><thead><tr><th>Артикул</th><th>Атауы</th><th>Санаты</th><th>Бағасы</th><th>Қалдық</th><th>Күйі</th><th></th></tr></thead><tbody id="gb"></tbody></table></div>
-    </div>
+      <div class="grid" id="grid"></div>
+    </section>
 
-    <div id="moves" class="hide">
-      <div class="wrap"><table><thead><tr><th>Уақыты</th><th>Тауар</th><th>Операция</th><th>Саны</th><th>Қолданушы</th></tr></thead><tbody id="mb"></tbody></table></div>
-    </div>
+    <section id="cart" class="hide">
+      <div id="cartList"></div>
+      <div class="checkout" id="checkout"></div>
+    </section>
 
-    <div id="users" class="hide">
-      <div class="wrap"><table><thead><tr><th>Логин</th><th>Email</th><th>Рөлі</th><th>Рөлді өзгерту</th><th></th></tr></thead><tbody id="ub"></tbody></table></div>
-    </div>
+    <section id="orders" class="hide"><div id="orderList"></div></section>
+
+    <section id="moves" class="hide">
+      <div class="wrap"><table>
+        <thead><tr><th>Уақыты</th><th>Тауар</th><th>Операция</th><th>Саны</th><th>Қолданушы</th></tr></thead>
+        <tbody id="mb"></tbody>
+      </table></div>
+    </section>
+
+    <section id="users" class="hide">
+      <div class="wrap"><table>
+        <thead><tr><th>Логин</th><th>Email</th><th>Рөлі</th><th>Рөлді өзгерту</th><th></th></tr></thead>
+        <tbody id="ub"></tbody>
+      </table></div>
+    </section>
   </main>
 </div>
 
@@ -75,11 +93,25 @@
   <form id="itemForm" novalidate>
     <h2 id="dit">Тауар қосу</h2>
     <label for="iname">Атауы</label><input id="iname">
-    <div class="row"><div><label for="isku">Артикул</label><input id="isku"></div><div><label for="icat">Санаты</label><input id="icat"></div></div>
-    <div class="row"><div><label for="iprice">Бағасы, ₸</label><input id="iprice" type="number" min="0"></div><div><label for="imin">Минималды қалдық</label><input id="imin" type="number" min="0"></div></div>
+    <div class="row">
+      <div><label for="isku">Артикул</label><input id="isku"></div>
+      <div><label for="icat">Санаты</label><input id="icat"></div>
+    </div>
+    <div class="row">
+      <div><label for="iprice">Бағасы, ₸</label><input id="iprice" type="number" min="0"></div>
+      <div><label for="imin">Минималды қалдық</label><input id="imin" type="number" min="0"></div>
+    </div>
     <div id="qtyrow"><label for="iqty">Бастапқы саны</label><input id="iqty" type="number" min="0" value="0"></div>
+    <label for="ifile">Сурет (JPG, PNG немесе WEBP, 3 МБ-қа дейін)</label>
+    <div class="imgrow">
+      <div class="preview" id="ipreview"></div>
+      <input id="ifile" type="file" accept="image/jpeg,image/png,image/webp">
+    </div>
     <div class="msg" id="imsg" role="alert"></div>
-    <div class="foot"><button type="button" class="btn ghost" data-close="di">Бас тарту</button><button class="btn" type="submit">Сақтау</button></div>
+    <div class="foot">
+      <button type="button" class="btn ghost" data-close="di">Бас тарту</button>
+      <button class="btn" type="submit">Сақтау</button>
+    </div>
   </form>
 </dialog>
 
@@ -88,16 +120,23 @@
     <h2 id="dmt">Қозғалыс</h2>
     <label for="mqty">Саны</label><input id="mqty" type="number" min="1" value="1">
     <div class="msg" id="mmsg" role="alert"></div>
-    <div class="foot"><button type="button" class="btn ghost" data-close="dm">Бас тарту</button><button class="btn" type="submit">Растау</button></div>
+    <div class="foot">
+      <button type="button" class="btn ghost" data-close="dm">Бас тарту</button>
+      <button class="btn" type="submit">Растау</button>
+    </div>
   </form>
 </dialog>
 
 <dialog id="dc">
-  <h2 id="dct">Растау</h2>
+  <h2>Растау</h2>
   <p id="dcm"></p>
-  <div class="foot"><button class="btn ghost" data-close="dc">Бас тарту</button><button class="btn danger" id="dcok">Жою</button></div>
+  <div class="foot">
+    <button class="btn ghost" data-close="dc">Бас тарту</button>
+    <button class="btn danger" id="dcok">Жою</button>
+  </div>
 </dialog>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="app.js"></script>
 </body>
 </html>
